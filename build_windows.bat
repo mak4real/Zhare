@@ -15,7 +15,7 @@ if not exist %CSC% (
 )
 
 echo Compiling windows-pc\HotspotShare.cs into Zhare.exe ...
-%CSC% /target:winexe /optimize+ /r:%WPF_DIR%\PresentationFramework.dll,%WPF_DIR%\PresentationCore.dll,%WPF_DIR%\WindowsBase.dll,System.dll,System.Xaml.dll /out:"Zhare.exe" "windows-pc\HotspotShare.cs"
+%CSC% /target:winexe /optimize+ /win32icon:"zhare_icon.ico" /r:%WPF_DIR%\PresentationFramework.dll,%WPF_DIR%\PresentationCore.dll,%WPF_DIR%\WindowsBase.dll,System.dll,System.Xaml.dll,System.Windows.Forms.dll /out:"Zhare.exe" "windows-pc\HotspotShare.cs"
 
 if %ERRORLEVEL% equ 0 (
     echo.

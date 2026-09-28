@@ -64,6 +64,39 @@ namespace Zhare
 
         private static Window mainWindow;
 
+        private static string _downloadDirectory;
+        public static string DownloadDirectory
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_downloadDirectory))
+                {
+                    string configPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Zhare", "download_path.txt");
+                    if (File.Exists(configPath))
+                    {
+                        try { _downloadDirectory = File.ReadAllText(configPath).Trim(); } catch { }
+                    }
+                    if (string.IsNullOrEmpty(_downloadDirectory) || !Directory.Exists(_downloadDirectory))
+                    {
+                        _downloadDirectory = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", "Zhare");
+                    }
+                }
+                return _downloadDirectory;
+            }
+        }
+
+        public static void SetDownloadDirectory(string path)
+        {
+            _downloadDirectory = path;
+            try
+            {
+                string configDir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Zhare");
+                if (!Directory.Exists(configDir)) Directory.CreateDirectory(configDir);
+                File.WriteAllText(System.IO.Path.Combine(configDir, "download_path.txt"), path);
+            }
+            catch { }
+        }
+
         // Header controls
         private static Border deviceCapsule;
         private static DropShadowEffect deviceGlow;
@@ -294,19 +327,11 @@ namespace Zhare
                 MinHeight = 640,
                 WindowStartupLocation = WindowStartupLocation.CenterScreen,
                 Foreground = Brushes.White,
-                FontFamily = new FontFamily("Segoe UI, -apple-system, sans-serif")
+                FontFamily = new FontFamily("Consolas, Arial, sans-serif")
             };
 
-            // Atmospheric Radial Gradient Background
-            RadialGradientBrush rootBg = new RadialGradientBrush();
-            rootBg.Center = new Point(0.5, 0.0);
-            rootBg.GradientOrigin = new Point(0.5, 0.0);
-            rootBg.RadiusX = 1.0;
-            rootBg.RadiusY = 0.85;
-            rootBg.GradientStops.Add(new GradientStop(Color.FromRgb(22, 31, 54), 0.0));
-            rootBg.GradientStops.Add(new GradientStop(Color.FromRgb(14, 20, 36), 0.45));
-            rootBg.GradientStops.Add(new GradientStop(Color.FromRgb(9, 13, 22), 1.0));
-            mainWindow.Background = rootBg;
+            // Stark Monochrome Void
+            mainWindow.Background = new SolidColorBrush(Color.FromRgb(0, 0, 0));
 
             // DWM Dark Title Bar
             mainWindow.SourceInitialized += (s, e) =>
@@ -317,7 +342,7 @@ namespace Zhare
                     int trueVal = 1;
                     DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref trueVal, sizeof(int));
                     DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ref trueVal, sizeof(int));
-                    int darkColor = 0x00160F09; // BGR for #090F16
+                    int darkColor = 0x00000000; // BGR for #000000
                     DwmSetWindowAttribute(hwnd, DWMWA_CAPTION_COLOR, ref darkColor, sizeof(int));
                 }
                 catch { }
@@ -333,8 +358,8 @@ namespace Zhare
             // ================= 1. HEADER =================
             Border headerBorder = new Border
             {
-                Background = new SolidColorBrush(Color.FromArgb(160, 11, 16, 28)),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(26, 36, 58)),
+                Background = new SolidColorBrush(Color.FromRgb(0, 0, 0)),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(33, 33, 33)),
                 BorderThickness = new Thickness(0, 0, 0, 1),
                 Padding = new Thickness(24, 14, 24, 14)
             };
@@ -352,22 +377,15 @@ namespace Zhare
             {
                 Width = 42,
                 Height = 42,
-                CornerRadius = new CornerRadius(12),
-                Background = new LinearGradientBrush(Color.FromRgb(99, 102, 241), Color.FromRgb(6, 182, 212), 45),
-                Margin = new Thickness(0, 0, 14, 0),
-                Effect = new DropShadowEffect
-                {
-                    Color = Color.FromRgb(99, 102, 241),
-                    BlurRadius = 16,
-                    ShadowDepth = 0,
-                    Opacity = 0.5
-                }
+                CornerRadius = new CornerRadius(0),
+                Background = Brushes.White,
+                Margin = new Thickness(0, 0, 14, 0)
             };
             TextBlock iconSymbol = new TextBlock
             {
                 Text = "⚡",
                 FontSize = 21,
-                Foreground = Brushes.White,
+                Foreground = Brushes.Black,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center
             };
@@ -386,19 +404,19 @@ namespace Zhare
             };
             Border badgePill = new Border
             {
-                Background = new SolidColorBrush(Color.FromArgb(120, 15, 41, 66)),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(3, 105, 161)),
-                BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(6),
+                Background = new SolidColorBrush(Color.FromRgb(234, 51, 35)),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(234, 51, 35)),
+                BorderThickness = new Thickness(0),
+                CornerRadius = new CornerRadius(0),
                 Padding = new Thickness(6, 2, 6, 2),
                 VerticalAlignment = VerticalAlignment.Center
             };
             TextBlock badgeText = new TextBlock
             {
-                Text = "P2P Beam",
-                FontSize = 10,
-                FontWeight = FontWeights.SemiBold,
-                Foreground = new SolidColorBrush(Color.FromRgb(56, 189, 248))
+                Text = "ZHARE",
+                FontSize = 11,
+                FontWeight = FontWeights.Bold,
+                Foreground = Brushes.Black
             };
             badgePill.Child = badgeText;
             titleRow.Children.Add(titleText);
@@ -418,23 +436,16 @@ namespace Zhare
             headerGrid.Children.Add(brandStack);
 
             // Right: Device Status Capsule
-            deviceGlow = new DropShadowEffect
-            {
-                Color = Color.FromRgb(245, 158, 11),
-                BlurRadius = 14,
-                ShadowDepth = 0,
-                Opacity = 0.35
-            };
+            deviceGlow = null;
 
             deviceCapsule = new Border
             {
-                CornerRadius = new CornerRadius(20),
-                Background = new SolidColorBrush(Color.FromRgb(18, 25, 40)),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(45, 58, 82)),
+                CornerRadius = new CornerRadius(0),
+                Background = new SolidColorBrush(Color.FromRgb(0, 0, 0)),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(255, 255, 255)),
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(14, 7, 16, 7),
                 Cursor = Cursors.Hand,
-                Effect = deviceGlow,
                 VerticalAlignment = VerticalAlignment.Center
             };
 
@@ -444,7 +455,7 @@ namespace Zhare
             {
                 Width = 8,
                 Height = 8,
-                Fill = new SolidColorBrush(Color.FromRgb(245, 158, 11)), // Amber searching
+                Fill = new SolidColorBrush(Color.FromRgb(255, 255, 255)), // White searching
                 Margin = new Thickness(0, 0, 9, 0),
                 VerticalAlignment = VerticalAlignment.Center
             };
@@ -542,10 +553,10 @@ namespace Zhare
             // Left: Spacious IP Input Capsule
             Border ipPill = new Border
             {
-                Background = new SolidColorBrush(Color.FromArgb(200, 14, 21, 35)),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(30, 42, 65)),
+                Background = new SolidColorBrush(Color.FromRgb(0, 0, 0)),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(50, 50, 50)),
                 BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(19),
+                CornerRadius = new CornerRadius(0),
                 Height = 38,
                 Padding = new Thickness(6, 2, 6, 2),
                 VerticalAlignment = VerticalAlignment.Center
@@ -590,11 +601,11 @@ namespace Zhare
             ipStack.Children.Add(txtDirectIp);
 
             btnDirectConnect = CreateSleekButton(
-                "Connect",
-                new SolidColorBrush(Color.FromRgb(79, 70, 229)),
-                new SolidColorBrush(Color.FromRgb(99, 102, 241)),
+                "CONNECT",
                 Brushes.White,
-                15,
+                new SolidColorBrush(Color.FromRgb(200, 200, 200)),
+                Brushes.Black,
+                0,
                 new Thickness(16, 0, 16, 0),
                 (s, e) =>
                 {
@@ -630,13 +641,13 @@ namespace Zhare
             };
 
             btnRescan = CreateBorderedButton(
-                "⚡ Radar Scan",
-                new SolidColorBrush(Color.FromArgb(160, 18, 26, 42)),
-                new SolidColorBrush(Color.FromRgb(30, 42, 66)),
-                new SolidColorBrush(Color.FromRgb(35, 48, 76)),
-                new SolidColorBrush(Color.FromRgb(56, 189, 248)),
-                new SolidColorBrush(Color.FromRgb(203, 213, 225)),
-                18,
+                "⚡ RADAR SCAN",
+                new SolidColorBrush(Color.FromRgb(0, 0, 0)),
+                Brushes.White,
+                new SolidColorBrush(Color.FromRgb(50, 50, 50)),
+                Brushes.White,
+                Brushes.White,
+                0,
                 new Thickness(16, 0, 16, 0),
                 (s, e) =>
                 {
@@ -651,7 +662,28 @@ namespace Zhare
             rightUtils.Children.Add(btnRescan);
 
             btnOpenDownloads = CreateBorderedButton(
-                "📁 Received Files",
+                "📁 RECEIVED FILES",
+                new SolidColorBrush(Color.FromRgb(0, 0, 0)),
+                Brushes.White,
+                new SolidColorBrush(Color.FromRgb(50, 50, 50)),
+                Brushes.White,
+                Brushes.White,
+                0,
+                new Thickness(16, 0, 16, 0),
+                (s, e) =>
+                {
+                    string path = DownloadDirectory;
+                    if (!Directory.Exists(path)) Directory.CreateDirectory(path);
+                    Process.Start("explorer.exe", path);
+                }
+            );
+            btnOpenDownloads.Height = 36;
+            btnOpenDownloads.Margin = new Thickness(8, 0, 0, 0);
+            btnOpenDownloads.VerticalAlignment = VerticalAlignment.Center;
+            rightUtils.Children.Add(btnOpenDownloads);
+
+            Button btnChangeDir = CreateBorderedButton(
+                "⚙️ Set Folder",
                 new SolidColorBrush(Color.FromArgb(160, 18, 26, 42)),
                 new SolidColorBrush(Color.FromRgb(30, 42, 66)),
                 new SolidColorBrush(Color.FromRgb(35, 48, 76)),
@@ -661,15 +693,23 @@ namespace Zhare
                 new Thickness(16, 0, 16, 0),
                 (s, e) =>
                 {
-                    string path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", "Zhare");
-                    if (!Directory.Exists(path)) Directory.CreateDirectory(path);
-                    Process.Start("explorer.exe", path);
+                    using (var fbd = new System.Windows.Forms.FolderBrowserDialog())
+                    {
+                        fbd.SelectedPath = DownloadDirectory;
+                        fbd.Description = "Select target folder for Zhare downloads:";
+                        fbd.ShowNewFolderButton = true;
+                        if (fbd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                        {
+                            SetDownloadDirectory(fbd.SelectedPath);
+                            MessageBox.Show("Download directory updated to:\n" + fbd.SelectedPath, "Settings Saved", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
+                    }
                 }
             );
-            btnOpenDownloads.Height = 36;
-            btnOpenDownloads.Margin = new Thickness(8, 0, 0, 0);
-            btnOpenDownloads.VerticalAlignment = VerticalAlignment.Center;
-            rightUtils.Children.Add(btnOpenDownloads);
+            btnChangeDir.Height = 36;
+            btnChangeDir.Margin = new Thickness(8, 0, 0, 0);
+            btnChangeDir.VerticalAlignment = VerticalAlignment.Center;
+            rightUtils.Children.Add(btnChangeDir);
 
             utilDock.Children.Add(rightUtils);
 
@@ -698,24 +738,17 @@ namespace Zhare
             // Nav Pill 1: Send
             navPillSend = new Border
             {
-                CornerRadius = new CornerRadius(13),
+                CornerRadius = new CornerRadius(0),
                 Padding = new Thickness(18, 7, 18, 7),
                 Cursor = Cursors.Hand,
-                Background = new LinearGradientBrush(Color.FromRgb(99, 102, 241), Color.FromRgb(79, 70, 229), 0),
-                Effect = new DropShadowEffect
-                {
-                    Color = Color.FromRgb(99, 102, 241),
-                    BlurRadius = 12,
-                    ShadowDepth = 0,
-                    Opacity = 0.4
-                }
+                Background = Brushes.White,
             };
             navTextSend = new TextBlock
             {
-                Text = "📤  Beam to Phone",
+                Text = "BEAM TO PHONE",
                 FontSize = 13,
-                FontWeight = FontWeights.SemiBold,
-                Foreground = Brushes.White
+                FontWeight = FontWeights.Bold,
+                Foreground = Brushes.Black
             };
             navPillSend.Child = navTextSend;
             navPillSend.MouseLeftButtonUp += (s, e) => SwitchTab(true);
@@ -1363,7 +1396,7 @@ namespace Zhare
                 new Thickness(18, 10, 18, 10),
                 (s, e) =>
                 {
-                    string path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", "Zhare");
+                    string path = DownloadDirectory;
                     if (!Directory.Exists(path)) Directory.CreateDirectory(path);
                     Process.Start("explorer.exe", path);
                 }
@@ -1901,7 +1934,7 @@ namespace Zhare
             DiscoveredDevice dev = GetSelectedDevice();
             if (dev == null) return;
 
-            string targetDir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", "Zhare");
+            string targetDir = DownloadDirectory;
             if (!Directory.Exists(targetDir)) Directory.CreateDirectory(targetDir);
 
             ThreadPool.QueueUserWorkItem((s) =>
@@ -1928,7 +1961,7 @@ namespace Zhare
 
                     mainWindow.Dispatcher.BeginInvoke(new Action(() =>
                     {
-                        MessageBox.Show(string.Format("Downloaded {0} into Downloads\\Zhare!", rf.Name), "Download Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageBox.Show(string.Format("Downloaded {0} into {1}!", rf.Name, targetDir), "Download Complete", MessageBoxButton.OK, MessageBoxImage.Information);
                     }));
                 }
                 catch (Exception ex)
