@@ -1535,7 +1535,14 @@ namespace Zhare
 
         private static void SyncClipboard()
         {
-            DiscoveredDevice dev = GetSelectedDevice();
+            DiscoveredDevice dev = null;
+            if (mainWindow != null)
+            {
+                mainWindow.Dispatcher.Invoke(new Action(() => {
+                    dev = GetSelectedDevice();
+                }));
+            }
+            
             if (dev == null) return;
             try
             {
