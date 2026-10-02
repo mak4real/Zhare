@@ -82,7 +82,7 @@ class HotspotHttpServer(
                     } else if (method == Method.POST) {
                         val map = HashMap<String, String>()
                         session.parseBody(map)
-                        val postData = map["postData"] ?: ""
+                        val postData = session.parameters["postData"]?.firstOrNull() ?: ""
                         inboundText = postData
                         onClipboardUpdated?.invoke(postData)
                         newFixedLengthResponse(Response.Status.OK, "application/json", "{\"status\":\"ok\"}")
