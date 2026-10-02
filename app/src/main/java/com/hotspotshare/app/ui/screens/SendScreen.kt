@@ -5,6 +5,7 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -32,6 +33,7 @@ fun SendScreen(
 ) {
     val context = LocalContext.current
     val sharedFiles by TransferForegroundService.sharedFiles.collectAsState()
+    val sharedClipboard by TransferForegroundService.sharedClipboard.collectAsState()
 
     // File picker launcher supporting multiple files of any type
     val filePickerLauncher = rememberLauncherForActivityResult(
@@ -45,13 +47,15 @@ fun SendScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { filePickerLauncher.launch(arrayOf("*/*")) },
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                text = { Text("Select Files") },
+                text = { Text("SELECT FILES") },
                 containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                shape = RoundedCornerShape(0.dp)
             )
         }
     ) { padding ->
@@ -71,25 +75,48 @@ fun SendScreen(
             ) {
                 Column {
                     Text(
-                        text = "Share Files",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
+                        text = "SHARE TO PC",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                     Text(
-                        text = "${sharedFiles.size} files available for download",
+                        text = "FILE & TEXT SYNC ACTIVE",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
-                if (sharedFiles.isNotEmpty()) {
-                    TextButton(onClick = { TransferForegroundService.clearSharedFiles() }) {
+                if (sharedFiles.isNotEmpty() || sharedClipboard.isNotEmpty()) {
+                    TextButton(onClick = { 
+                        TransferForegroundService.clearSharedFiles()
+                        TransferForegroundService.setSharedClipboard("")
+                    }) {
                         Icon(Icons.Default.DeleteSweep, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Clear All")
+                        Text("CLEAR")
                     }
                 }
             }
+            
+            // Text Sharing Component
+            OutlinedTextField(
+                value = sharedClipboard,
+                onValueChange = { TransferForegroundService.setSharedClipboard(it) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+                    .padding(bottom = 16.dp),
+                placeholder = { Text("TYPE OR PASTE TEXT HERE EXPOSED TO PC CLIPIBOARD") },
+                textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
+                shape = RoundedCornerShape(0.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    focusedContainerColor = MaterialTheme.colorScheme.background,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                    cursorColor = MaterialTheme.colorScheme.primary
+                )
+            )
 
             if (sharedFiles.isEmpty()) {
                 Box(
@@ -100,21 +127,16 @@ fun SendScreen(
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.CloudUpload,
-                            contentDescription = null,
-                            modifier = Modifier.size(72.dp),
-                            tint = MaterialTheme.colorScheme.outline
-                        )
                         Text(
-                            text = "No Files Selected",
+                            text = "[ NO FILES SYNCED ]",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                         Text(
-                            text = "Tap 'Select Files' to choose photos, videos, docs, or APKs to share with your Windows PC or another phone.",
+                            text = "TAP 'SELECT FILES' TO BROADCAST TO CONNECTED DEVICES.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(horizontal = 32.dp),
@@ -125,7 +147,7 @@ fun SendScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                     contentPadding = PaddingValues(bottom = 80.dp)
                 ) {
                     items(sharedFiles, key = { it.uri.toString() }) { file ->
@@ -147,42 +169,44 @@ fun SharedFileItem(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(0.dp),
+        border = BorderStroke(2.dp, MaterialTheme.colorScheme.onBackground),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+            containerColor = MaterialTheme.colorScheme.background
         )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
                 modifier = Modifier.weight(1f),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.size(44.dp)
+                    shape = RoundedCornerShape(0.dp),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.size(48.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = getIconForMime(file.mimeType, file.name),
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            tint = MaterialTheme.colorScheme.background
                         )
                     }
                 }
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = file.name,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 14.sp,
+                        text = file.name.uppercase(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -198,7 +222,7 @@ fun SharedFileItem(
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = "Remove file",
-                    tint = MaterialTheme.colorScheme.error
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
         }

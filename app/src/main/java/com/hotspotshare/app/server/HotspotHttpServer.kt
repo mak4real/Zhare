@@ -21,6 +21,7 @@ class HotspotHttpServer(
     val sharedFiles = CopyOnWriteArrayList<SharedFile>()
     var sharedClipboard: String = ""
     var onFileReceived: ((File) -> Unit)? = null
+    var onClipboardUpdated: ((String) -> Unit)? = null
 
     override fun serve(session: IHTTPSession): Response {
         val uri = session.uri
@@ -82,6 +83,7 @@ class HotspotHttpServer(
                         session.parseBody(map)
                         val postData = map["postData"] ?: ""
                         sharedClipboard = postData
+                        onClipboardUpdated?.invoke(postData)
                         newFixedLengthResponse(Response.Status.OK, "application/json", "{\"status\":\"ok\"}")
                     } else {
                         newFixedLengthResponse(Response.Status.METHOD_NOT_ALLOWED, "text/plain", "Method not allowed")

@@ -1,0 +1,5 @@
+* feature/nothing-os-ui-redesign
+  main
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/feature/nothing-os-ui-redesign
+  remotes/origin/main

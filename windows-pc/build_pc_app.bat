@@ -5,7 +5,7 @@ echo Compiling HotspotShare.cs with csc.exe into Zhare.exe...
 set CSC="C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
 set WPF="C:\Windows\Microsoft.NET\Framework64\v4.0.30319\WPF"
 
-%CSC% /target:winexe /optimize+ /r:%WPF%\PresentationFramework.dll,%WPF%\PresentationCore.dll,%WPF%\WindowsBase.dll,System.dll,System.Xaml.dll /out:"%~dp0..\Zhare.exe" "%~dp0HotspotShare.cs"
+%CSC% /target:winexe /optimize+ /r:%WPF%\PresentationFramework.dll,%WPF%\PresentationCore.dll,%WPF%\WindowsBase.dll,System.dll,System.Xaml.dll /win32icon:"%~dp0..\zhare_icon.ico" /out:"%~dp0..\Zhare.exe" "%~dp0HotspotShare.cs"
 
 if %ERRORLEVEL% equ 0 (
     copy /Y "%~dp0..\Zhare.exe" "%~dp0..\HotspotShare.exe" >nul

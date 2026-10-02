@@ -42,6 +42,9 @@ class TransferForegroundService : Service() {
         private val _receivedFiles = MutableStateFlow<List<ReceivedFile>>(emptyList())
         val receivedFiles: StateFlow<List<ReceivedFile>> = _receivedFiles.asStateFlow()
 
+        private val _sharedClipboard = MutableStateFlow("")
+        val sharedClipboard: StateFlow<String> = _sharedClipboard.asStateFlow()
+
         private var serverInstance: HotspotHttpServer? = null
 
         fun addSharedFiles(newFiles: List<SharedFile>) {
@@ -63,6 +66,13 @@ class TransferForegroundService : Service() {
         fun clearSharedFiles() {
             _sharedFiles.value = emptyList()
             serverInstance?.sharedFiles?.clear()
+        }
+
+        fun setSharedClipboard(text: String, updateServer: Boolean = true) {
+            _sharedClipboard.value = text
+            if (updateServer) {
+                serverInstance?.sharedClipboard = text
+            }
         }
 
         fun startService(context: Context) {
@@ -112,6 +122,10 @@ class TransferForegroundService : Service() {
             server.onFileReceived = { file ->
                 handleIncomingFile(file)
             }
+            server.onClipboardUpdated = { text ->
+                _sharedClipboard.value = text
+            }
+            server.sharedClipboard = _sharedClipboard.value
             server.start()
             serverInstance = server
 

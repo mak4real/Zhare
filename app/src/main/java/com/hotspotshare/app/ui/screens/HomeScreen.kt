@@ -5,10 +5,10 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -17,13 +17,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hotspotshare.app.network.DiscoveryManager
@@ -49,7 +46,6 @@ fun HomeScreen(
         localIp = NetworkUtils.getLocalIpAddress() ?: "192.168.43.1"
     }
 
-    // Pulse animation for active beacon
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val pulseScale by infiniteTransition.animateFloat(
         initialValue = 1.0f,
@@ -59,11 +55,6 @@ fun HomeScreen(
             repeatMode = RepeatMode.Reverse
         ),
         label = "pulseScale"
-    )
-
-    val activeColor by animateColorAsState(
-        targetValue = if (isRunning) Color(0xFF22C55E) else Color(0xFF64748B),
-        label = "activeColor"
     )
 
     Column(
@@ -82,13 +73,13 @@ fun HomeScreen(
         ) {
             Column {
                 Text(
-                    text = "Zhare",
+                    text = "ZHARE",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground
                 )
                 Text(
-                    text = if (isRunning) "Ready for wireless transfer" else "Tap start to connect with PC",
+                    text = if (isRunning) "SERVER ACTIVE" else "CONNECT TO PC",
                     fontSize = 13.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -110,7 +101,7 @@ fun HomeScreen(
                 Icon(
                     imageVector = Icons.Default.WifiTethering,
                     contentDescription = "Hotspot Settings",
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = MaterialTheme.colorScheme.onBackground
                 )
             }
         }
@@ -119,9 +110,10 @@ fun HomeScreen(
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                containerColor = MaterialTheme.colorScheme.background
             ),
-            shape = RoundedCornerShape(24.dp)
+            shape = RoundedCornerShape(0.dp),
+            border = BorderStroke(3.dp, MaterialTheme.colorScheme.onBackground)
         ) {
             Column(
                 modifier = Modifier
@@ -130,33 +122,33 @@ fun HomeScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Animated Glowing Beacon
                 Box(
                     modifier = Modifier.size(90.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     if (isRunning) {
-                        Box(
+                        Surface(
                             modifier = Modifier
                                 .size(90.dp)
-                                .scale(pulseScale)
-                                .clip(CircleShape)
-                                .background(Color(0xFF22C55E).copy(alpha = 0.2f))
-                        )
+                                .scale(pulseScale),
+                            shape = RoundedCornerShape(0.dp),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                            border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+                        ) {}
                     }
 
                     Surface(
                         modifier = Modifier.size(64.dp),
-                        shape = CircleShape,
-                        color = if (isRunning) Color(0xFF22C55E) else MaterialTheme.colorScheme.surface,
-                        shadowElevation = if (isRunning) 6.dp else 1.dp
+                        shape = RoundedCornerShape(0.dp),
+                        color = if (isRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.background,
+                        border = BorderStroke(if (isRunning) 0.dp else 2.dp, MaterialTheme.colorScheme.onBackground)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = if (isRunning) Icons.Default.Bolt else Icons.Default.PowerSettingsNew,
                                 contentDescription = null,
                                 modifier = Modifier.size(32.dp),
-                                tint = if (isRunning) Color.White else MaterialTheme.colorScheme.outline
+                                tint = if (isRunning) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground
                             )
                         }
                     }
@@ -164,12 +156,12 @@ fun HomeScreen(
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = if (isRunning) "Server Active" else "Ready to Start",
+                        text = if (isRunning) "SERVER ACTIVE" else "READY TO START",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = if (isRunning) "Connected on $wifiSsid" else "Connect PC and phone to same Wi-Fi and tap start",
+                        text = if (isRunning) "WIFI: $wifiSsid" else "CONNECT PC AND PHONE",
                         fontSize = 13.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -177,8 +169,9 @@ fun HomeScreen(
 
                 if (isRunning) {
                     Surface(
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        shape = RoundedCornerShape(12.dp)
+                        color = MaterialTheme.colorScheme.background,
+                        shape = RoundedCornerShape(0.dp),
+                        border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
@@ -195,7 +188,6 @@ fun HomeScreen(
                     }
                 }
 
-                // Primary Start/Stop Pill Button
                 Button(
                     onClick = {
                         if (isRunning) {
@@ -207,13 +199,15 @@ fun HomeScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(0.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isRunning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-                    )
+                        containerColor = if (isRunning) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground,
+                        contentColor = if (isRunning) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.background
+                    ),
+                    border = BorderStroke(2.dp, MaterialTheme.colorScheme.onBackground)
                 ) {
                     Text(
-                        text = if (isRunning) "Stop Server" else "Start Transfer Server",
+                        text = if (isRunning) "STOP SERVER" else "START SERVER",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -221,22 +215,21 @@ fun HomeScreen(
             }
         }
 
-        // Live Detected Devices Pill
         AnimatedVisibility(visible = isRunning) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(0.dp),
+                border = BorderStroke(2.dp, MaterialTheme.colorScheme.onBackground),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    containerColor = MaterialTheme.colorScheme.background
+                )
             ) {
                 Column(
                     modifier = Modifier.padding(18.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Text(
-                        text = "Connected Devices",
+                        text = "CONNECTED DEVICES",
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp
                     )
@@ -246,8 +239,7 @@ fun HomeScreen(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                                    .background(MaterialTheme.colorScheme.background)
                                     .padding(12.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -258,8 +250,8 @@ fun HomeScreen(
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(dev.name, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                    Text("${dev.ip} • Ready to transfer", fontSize = 12.sp, color = Color(0xFF22C55E))
+                                    Text(dev.name.uppercase(), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                    Text("${dev.ip} • READY", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
                                 }
                             }
                         }
@@ -268,9 +260,9 @@ fun HomeScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.primary)
                             Text(
-                                text = "Open HotspotShare on PC to auto-connect...",
+                                text = "AWAITING PC CONNECTION...",
                                 fontSize = 13.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -280,7 +272,6 @@ fun HomeScreen(
             }
         }
 
-        // Simple Action Grid
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(14.dp)
@@ -288,9 +279,10 @@ fun HomeScreen(
             Card(
                 modifier = Modifier.weight(1f),
                 onClick = onNavigateToSend,
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(0.dp),
+                border = BorderStroke(2.dp, MaterialTheme.colorScheme.onBackground),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             ) {
                 Column(
@@ -300,20 +292,21 @@ fun HomeScreen(
                     Icon(
                         imageVector = Icons.Default.UploadFile,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.size(28.dp)
                     )
-                    Text("Send Files", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    Text("${sharedFiles.size} queued", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("SEND", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text("${sharedFiles.size} QUEUED", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
 
             Card(
                 modifier = Modifier.weight(1f),
                 onClick = onNavigateToReceive,
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(0.dp),
+                border = BorderStroke(2.dp, MaterialTheme.colorScheme.onBackground),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             ) {
                 Column(
@@ -323,11 +316,11 @@ fun HomeScreen(
                     Icon(
                         imageVector = Icons.Default.FolderOpen,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.secondary,
+                        tint = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.size(28.dp)
                     )
-                    Text("Received", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    Text("${receivedFiles.size} files saved", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("RECEIVE", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text("${receivedFiles.size} FILES", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }

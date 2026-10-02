@@ -111,6 +111,7 @@ namespace Zhare
         private static Button btnDirectConnect;
         private static Button btnRescan;
         private static Button btnOpenDownloads;
+        private static TextBox txtClipboard;
 
         // Segmented navigation
         private static Border navPillSend;
@@ -351,6 +352,7 @@ namespace Zhare
             Grid rootGrid = new Grid();
             rootGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(82) }); // Header
             rootGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(58) }); // Quick Connect & Utilities Bar
+            rootGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(70) }); // Clipboard Bar
             rootGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(52) }); // Segmented Nav Tabs
             rootGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Main Content
             mainWindow.Content = rootGrid;
@@ -580,9 +582,9 @@ namespace Zhare
                 Width = 155,
                 Height = 30,
                 Text = localSubnet,
-                Background = new SolidColorBrush(Color.FromRgb(19, 27, 44)),
+                Background = new SolidColorBrush(Color.FromRgb(0, 0, 0)),
                 Foreground = Brushes.White,
-                CaretBrush = new SolidColorBrush(Color.FromRgb(56, 189, 248)),
+                CaretBrush = new SolidColorBrush(Color.FromRgb(255, 255, 255)),
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(10, 0, 10, 0),
                 FontSize = 13,
@@ -687,7 +689,7 @@ namespace Zhare
                 new SolidColorBrush(Color.FromArgb(160, 18, 26, 42)),
                 new SolidColorBrush(Color.FromRgb(30, 42, 66)),
                 new SolidColorBrush(Color.FromRgb(35, 48, 76)),
-                new SolidColorBrush(Color.FromRgb(56, 189, 248)),
+                new SolidColorBrush(Color.FromRgb(255, 255, 255)),
                 new SolidColorBrush(Color.FromRgb(203, 213, 225)),
                 18,
                 new Thickness(16, 0, 16, 0),
@@ -713,21 +715,84 @@ namespace Zhare
 
             utilDock.Children.Add(rightUtils);
 
+            // ================= 2.5 TEXT SHARING BOARD =================
+            Border clipboardBorder = new Border
+            {
+                Padding = new Thickness(24, 0, 24, 10)
+            };
+            Grid.SetRow(clipboardBorder, 2);
+            rootGrid.Children.Add(clipboardBorder);
+
+            DockPanel clipboardDock = new DockPanel();
+            clipboardBorder.Child = clipboardDock;
+
+            TextBlock clipIcon = new TextBlock
+            {
+                Text = "🔗 SYNC TEXT",
+                FontSize = 13,
+                FontWeight = FontWeights.Bold,
+                Foreground = Brushes.White,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 10, 0)
+            };
+            DockPanel.SetDock(clipIcon, Dock.Left);
+            clipboardDock.Children.Add(clipIcon);
+
+            Button btnCopy = CreateBorderedButton(
+                "COPY",
+                new SolidColorBrush(Color.FromRgb(0, 0, 0)),
+                new SolidColorBrush(Color.FromRgb(255, 255, 255)),
+                new SolidColorBrush(Color.FromRgb(255, 255, 255)),
+                new SolidColorBrush(Color.FromRgb(0, 0, 0)),
+                new SolidColorBrush(Color.FromRgb(255, 255, 255)),
+                0,
+                new Thickness(12, 0, 12, 0),
+                (s, e) =>
+                {
+                    if (!string.IsNullOrEmpty(txtClipboard.Text))
+                        Clipboard.SetText(txtClipboard.Text);
+                }
+            );
+            btnCopy.Height = 36;
+            btnCopy.Margin = new Thickness(10, 0, 0, 0);
+            DockPanel.SetDock(btnCopy, Dock.Right);
+            clipboardDock.Children.Add(btnCopy);
+
+            txtClipboard = new TextBox
+            {
+                Height = 36,
+                Background = new SolidColorBrush(Color.FromRgb(0, 0, 0)),
+                Foreground = Brushes.White,
+                BorderThickness = new Thickness(1),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(100, 100, 100)),
+                Padding = new Thickness(10, 0, 10, 0),
+                FontSize = 13,
+                VerticalContentAlignment = VerticalAlignment.Center
+            };
+            txtClipboard.Template = CreateRoundedTextBoxTemplate(0);
+            txtClipboard.TextChanged += (s, e) =>
+            {
+                string text = txtClipboard.Text;
+                // Simple debounce equivalent logic could be added here, but direct push works for testing
+                PushClipboard(text);
+            };
+            clipboardDock.Children.Add(txtClipboard);
+
             // ================= 3. SEGMENTED NAVIGATION DOCK =================
             Border navContainer = new Border
             {
                 Padding = new Thickness(24, 4, 24, 6),
                 HorizontalAlignment = HorizontalAlignment.Left
             };
-            Grid.SetRow(navContainer, 2);
+            Grid.SetRow(navContainer, 3);
             rootGrid.Children.Add(navContainer);
 
             Border navCapsule = new Border
             {
-                Background = new SolidColorBrush(Color.FromArgb(200, 12, 18, 30)),
+                Background = new SolidColorBrush(Color.FromArgb(200, 0, 0, 0)),
                 BorderBrush = new SolidColorBrush(Color.FromRgb(26, 38, 60)),
                 BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(16),
+                CornerRadius = new CornerRadius(0),
                 Padding = new Thickness(3)
             };
             navContainer.Child = navCapsule;
@@ -757,7 +822,7 @@ namespace Zhare
             // Nav Pill 2: Receive
             navPillReceive = new Border
             {
-                CornerRadius = new CornerRadius(13),
+                CornerRadius = new CornerRadius(0),
                 Padding = new Thickness(18, 7, 18, 7),
                 Cursor = Cursors.Hand,
                 Background = Brushes.Transparent,
@@ -790,7 +855,7 @@ namespace Zhare
 
             // ================= 4. MAIN CONTENT AREA =================
             Grid contentGrid = new Grid { Margin = new Thickness(24, 6, 24, 20) };
-            Grid.SetRow(contentGrid, 3);
+            Grid.SetRow(contentGrid, 4);
             rootGrid.Children.Add(contentGrid);
 
             // VIEW 1: SEND
@@ -814,8 +879,8 @@ namespace Zhare
         {
             if (isSendActive)
             {
-                navPillSend.Background = new LinearGradientBrush(Color.FromRgb(99, 102, 241), Color.FromRgb(79, 70, 229), 0);
-                navPillSend.Effect = new DropShadowEffect { Color = Color.FromRgb(99, 102, 241), BlurRadius = 12, ShadowDepth = 0, Opacity = 0.4 };
+                navPillSend.Background = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                navPillSend.Effect = new DropShadowEffect { Color = Color.FromRgb(234, 51, 35), BlurRadius = 12, ShadowDepth = 0, Opacity = 0.4 };
                 navTextSend.Foreground = Brushes.White;
                 navTextSend.FontWeight = FontWeights.SemiBold;
 
@@ -826,8 +891,8 @@ namespace Zhare
             }
             else
             {
-                navPillReceive.Background = new LinearGradientBrush(Color.FromRgb(99, 102, 241), Color.FromRgb(79, 70, 229), 0);
-                navPillReceive.Effect = new DropShadowEffect { Color = Color.FromRgb(99, 102, 241), BlurRadius = 12, ShadowDepth = 0, Opacity = 0.4 };
+                navPillReceive.Background = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                navPillReceive.Effect = new DropShadowEffect { Color = Color.FromRgb(234, 51, 35), BlurRadius = 12, ShadowDepth = 0, Opacity = 0.4 };
                 navTextReceive.Foreground = Brushes.White;
                 navTextReceive.FontWeight = FontWeights.SemiBold;
 
@@ -851,7 +916,7 @@ namespace Zhare
             // Futuristic Beam Drop Zone
             dropZoneGlow = new DropShadowEffect
             {
-                Color = Color.FromRgb(6, 182, 212),
+                Color = Color.FromRgb(234, 51, 35),
                 BlurRadius = 24,
                 ShadowDepth = 0,
                 Opacity = 0.0
@@ -859,9 +924,9 @@ namespace Zhare
 
             dropZone = new Border
             {
-                CornerRadius = new CornerRadius(20),
-                Background = new SolidColorBrush(Color.FromArgb(200, 14, 22, 38)),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(30, 44, 72)),
+                CornerRadius = new CornerRadius(0),
+                Background = new SolidColorBrush(Color.FromArgb(200, 0, 0, 0)),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(51, 51, 51)),
                 BorderThickness = new Thickness(1.5),
                 Cursor = Cursors.Hand,
                 AllowDrop = true,
@@ -881,7 +946,7 @@ namespace Zhare
             {
                 Width = 52,
                 Height = 52,
-                CornerRadius = new CornerRadius(26),
+                CornerRadius = new CornerRadius(0),
                 Background = new SolidColorBrush(Color.FromRgb(24, 35, 60)),
                 BorderBrush = new SolidColorBrush(Color.FromRgb(43, 59, 94)),
                 BorderThickness = new Thickness(1),
@@ -892,7 +957,7 @@ namespace Zhare
             {
                 Text = "⚡",
                 FontSize = 24,
-                Foreground = new SolidColorBrush(Color.FromRgb(56, 189, 248)),
+                Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255)),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center
             };
@@ -921,10 +986,10 @@ namespace Zhare
 
             Border speedPill = new Border
             {
-                Background = new SolidColorBrush(Color.FromArgb(160, 10, 24, 42)),
+                Background = new SolidColorBrush(Color.FromArgb(160, 0, 0, 0)),
                 BorderBrush = new SolidColorBrush(Color.FromRgb(3, 105, 161)),
                 BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(10),
+                CornerRadius = new CornerRadius(0),
                 Padding = new Thickness(10, 3, 10, 3),
                 HorizontalAlignment = HorizontalAlignment.Center
             };
@@ -933,7 +998,7 @@ namespace Zhare
                 Text = "⚡ High-Speed Direct P2P • No Internet Required • Zero Compression",
                 FontSize = 11,
                 FontWeight = FontWeights.Medium,
-                Foreground = new SolidColorBrush(Color.FromRgb(56, 189, 248))
+                Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255))
             };
             speedPill.Child = speedText;
             dropStack.Children.Add(speedPill);
@@ -945,21 +1010,21 @@ namespace Zhare
             {
                 if (e.Data.GetDataPresent(DataFormats.FileDrop))
                 {
-                    dropZone.BorderBrush = new SolidColorBrush(Color.FromRgb(6, 182, 212));
-                    dropZone.Background = new SolidColorBrush(Color.FromArgb(240, 18, 30, 56));
+                    dropZone.BorderBrush = new SolidColorBrush(Color.FromRgb(234, 51, 35));
+                    dropZone.Background = new SolidColorBrush(Color.FromArgb(240, 15, 15, 15));
                     dropZoneGlow.Opacity = 0.6;
                 }
             };
             dropZone.DragLeave += (s, e) =>
             {
-                dropZone.BorderBrush = new SolidColorBrush(Color.FromRgb(30, 44, 72));
-                dropZone.Background = new SolidColorBrush(Color.FromArgb(200, 14, 22, 38));
+                dropZone.BorderBrush = new SolidColorBrush(Color.FromRgb(51, 51, 51));
+                dropZone.Background = new SolidColorBrush(Color.FromArgb(200, 0, 0, 0));
                 dropZoneGlow.Opacity = 0.0;
             };
             dropZone.Drop += (s, e) =>
             {
-                dropZone.BorderBrush = new SolidColorBrush(Color.FromRgb(30, 44, 72));
-                dropZone.Background = new SolidColorBrush(Color.FromArgb(200, 14, 22, 38));
+                dropZone.BorderBrush = new SolidColorBrush(Color.FromRgb(51, 51, 51));
+                dropZone.Background = new SolidColorBrush(Color.FromArgb(200, 0, 0, 0));
                 dropZoneGlow.Opacity = 0.0;
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
                 if (files != null && files.Length > 0)
@@ -979,8 +1044,8 @@ namespace Zhare
             // Files Queue Card
             Border queueCard = new Border
             {
-                CornerRadius = new CornerRadius(18),
-                Background = new SolidColorBrush(Color.FromArgb(180, 12, 18, 32)),
+                CornerRadius = new CornerRadius(0),
+                Background = new SolidColorBrush(Color.FromArgb(180, 0, 0, 0)),
                 BorderBrush = new SolidColorBrush(Color.FromRgb(26, 37, 60)),
                 BorderThickness = new Thickness(1),
                 Margin = new Thickness(0, 12, 0, 12),
@@ -1011,7 +1076,7 @@ namespace Zhare
                 Text = "",
                 FontSize = 11.5,
                 FontWeight = FontWeights.SemiBold,
-                Foreground = new SolidColorBrush(Color.FromRgb(56, 189, 248)),
+                Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255)),
                 Margin = new Thickness(8, 0, 0, 0),
                 VerticalAlignment = VerticalAlignment.Center,
                 Visibility = Visibility.Collapsed
@@ -1061,13 +1126,13 @@ namespace Zhare
                 FontSize = 14.5,
                 FontWeight = FontWeights.Bold,
                 Foreground = Brushes.White,
-                Background = new LinearGradientBrush(Color.FromRgb(99, 102, 241), Color.FromRgb(6, 182, 212), 0),
+                Background = new SolidColorBrush(Color.FromRgb(234, 51, 35)),
                 BorderThickness = new Thickness(0),
                 Cursor = Cursors.Hand,
                 Visibility = Visibility.Collapsed,
                 Effect = new DropShadowEffect
                 {
-                    Color = Color.FromRgb(99, 102, 241),
+                    Color = Color.FromRgb(234, 51, 35),
                     BlurRadius = 18,
                     ShadowDepth = 0,
                     Opacity = 0.5
@@ -1080,7 +1145,7 @@ namespace Zhare
             // Cyber Transfer HUD (Fully visible, rock-solid layout)
             progressCard = new Border
             {
-                CornerRadius = new CornerRadius(16),
+                CornerRadius = new CornerRadius(0),
                 Background = new SolidColorBrush(Color.FromArgb(230, 15, 23, 42)),
                 BorderBrush = new SolidColorBrush(Color.FromRgb(30, 41, 59)),
                 BorderThickness = new Thickness(1),
@@ -1111,7 +1176,7 @@ namespace Zhare
                 Text = "⚡ 0 MB/s",
                 FontSize = 13,
                 FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(Color.FromRgb(56, 189, 248)),
+                Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255)),
                 HorizontalAlignment = HorizontalAlignment.Right,
                 VerticalAlignment = VerticalAlignment.Center
             };
@@ -1123,7 +1188,7 @@ namespace Zhare
             Border progTrack = new Border
             {
                 Height = 8,
-                CornerRadius = new CornerRadius(4),
+                CornerRadius = new CornerRadius(0),
                 Background = new SolidColorBrush(Color.FromRgb(20, 28, 48)),
                 BorderBrush = new SolidColorBrush(Color.FromRgb(35, 48, 76)),
                 BorderThickness = new Thickness(1),
@@ -1139,8 +1204,8 @@ namespace Zhare
 
             Border progFill = new Border
             {
-                CornerRadius = new CornerRadius(3),
-                Background = new LinearGradientBrush(Color.FromRgb(99, 102, 241), Color.FromRgb(6, 182, 212), 0)
+                CornerRadius = new CornerRadius(0),
+                Background = new SolidColorBrush(Color.FromRgb(234, 51, 35))
             };
             Grid.SetColumn(progFill, 0);
             progBarGrid.Children.Add(progFill);
@@ -1199,9 +1264,9 @@ namespace Zhare
 
                 Border card = new Border
                 {
-                    CornerRadius = new CornerRadius(12),
-                    Background = new SolidColorBrush(Color.FromRgb(19, 27, 44)),
-                    BorderBrush = new SolidColorBrush(Color.FromRgb(30, 44, 70)),
+                    CornerRadius = new CornerRadius(0),
+                    Background = new SolidColorBrush(Color.FromRgb(0, 0, 0)),
+                    BorderBrush = new SolidColorBrush(Color.FromRgb(51, 51, 51)),
                     BorderThickness = new Thickness(1),
                     Padding = new Thickness(12, 9, 12, 9),
                     Margin = new Thickness(0, 0, 0, 6)
@@ -1248,7 +1313,7 @@ namespace Zhare
                 {
                     Width = 32,
                     Height = 32,
-                    CornerRadius = new CornerRadius(8),
+                    CornerRadius = new CornerRadius(0),
                     Background = new SolidColorBrush(Color.FromRgb(28, 38, 60)),
                     Margin = new Thickness(0, 0, 10, 0)
                 };
@@ -1331,7 +1396,7 @@ namespace Zhare
                 new SolidColorBrush(Color.FromRgb(22, 31, 50)),
                 new SolidColorBrush(Color.FromRgb(32, 45, 72)),
                 new SolidColorBrush(Color.FromRgb(35, 48, 76)),
-                new SolidColorBrush(Color.FromRgb(56, 189, 248)),
+                new SolidColorBrush(Color.FromRgb(255, 255, 255)),
                 Brushes.White,
                 10,
                 new Thickness(14, 6, 14, 6),
@@ -1345,8 +1410,8 @@ namespace Zhare
             // Remote List Card
             Border card = new Border
             {
-                CornerRadius = new CornerRadius(18),
-                Background = new SolidColorBrush(Color.FromArgb(180, 12, 18, 32)),
+                CornerRadius = new CornerRadius(0),
+                Background = new SolidColorBrush(Color.FromArgb(180, 0, 0, 0)),
                 BorderBrush = new SolidColorBrush(Color.FromRgb(26, 37, 60)),
                 BorderThickness = new Thickness(1),
                 Padding = new Thickness(16),
@@ -1374,8 +1439,8 @@ namespace Zhare
             DockPanel bottom = new DockPanel();
             btnDownloadAll = CreateSleekButton(
                 "⬇️  Download All to PC",
-                new LinearGradientBrush(Color.FromRgb(99, 102, 241), Color.FromRgb(79, 70, 229), 0),
-                new LinearGradientBrush(Color.FromRgb(129, 140, 248), Color.FromRgb(99, 102, 241), 0),
+                new SolidColorBrush(Color.FromRgb(255, 255, 255)),
+                new SolidColorBrush(Color.FromRgb(230, 230, 230)),
                 Brushes.White,
                 14,
                 new Thickness(24, 10, 24, 10),
@@ -1390,7 +1455,7 @@ namespace Zhare
                 new SolidColorBrush(Color.FromRgb(22, 31, 50)),
                 new SolidColorBrush(Color.FromRgb(32, 45, 72)),
                 new SolidColorBrush(Color.FromRgb(35, 48, 76)),
-                new SolidColorBrush(Color.FromRgb(56, 189, 248)),
+                new SolidColorBrush(Color.FromRgb(255, 255, 255)),
                 Brushes.White,
                 14,
                 new Thickness(18, 10, 18, 10),
@@ -1453,6 +1518,8 @@ namespace Zhare
             catch { }
         }
 
+        private static string currentClipboard = "";
+
         private static void AutoScanLoop()
         {
             Thread.Sleep(800);
@@ -1460,9 +1527,68 @@ namespace Zhare
 
             while (isRunning)
             {
-                Thread.Sleep(15000);
+                Thread.Sleep(5000);
                 SafeScanSubnet();
+                SyncClipboard();
             }
+        }
+
+        private static void SyncClipboard()
+        {
+            DiscoveredDevice dev = GetSelectedDevice();
+            if (dev == null) return;
+            try
+            {
+                string url = string.Format("http://{0}:{1}/api/clipboard", dev.IpAddress, dev.Port);
+                HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
+                req.Timeout = 1500;
+                using (HttpWebResponse resp = (HttpWebResponse)req.GetResponse())
+                using (StreamReader reader = new StreamReader(resp.GetResponseStream()))
+                {
+                    string json = reader.ReadToEnd();
+                    string remoteClipboard = ExtractJson(json, "clipboard");
+                    if (remoteClipboard != null) remoteClipboard = remoteClipboard.Replace("\\n", "\n").Replace("\\r", "\r");
+                    if (!string.IsNullOrEmpty(remoteClipboard) && remoteClipboard != currentClipboard)
+                    {
+                        currentClipboard = remoteClipboard;
+                        mainWindow.Dispatcher.BeginInvoke(new Action(() =>
+                        {
+                            if (txtClipboard != null && txtClipboard.Text != currentClipboard)
+                            {
+                                txtClipboard.Text = currentClipboard;
+                            }
+                        }));
+                    }
+                }
+            }
+            catch { }
+        }
+
+        private static void PushClipboard(string text)
+        {
+            if (text == currentClipboard) return;
+            currentClipboard = text;
+            DiscoveredDevice dev = GetSelectedDevice();
+            if (dev == null) return;
+            ThreadPool.QueueUserWorkItem((s) =>
+            {
+                try
+                {
+                    string url = string.Format("http://{0}:{1}/api/clipboard", dev.IpAddress, dev.Port);
+                    HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                    request.Method = "POST";
+                    request.ContentType = "application/x-www-form-urlencoded";
+                    string encodedText = Uri.EscapeDataString(text);
+                    byte[] data = Encoding.UTF8.GetBytes("postData=" + encodedText);
+                    request.ContentLength = data.Length;
+                    using (Stream stream = request.GetRequestStream())
+                    {
+                        stream.Write(data, 0, data.Length);
+                    }
+                    request.GetResponse().Close();
+                }
+                catch { }
+            });
         }
 
         // 100% crash-proof subnet scan using dedicated background thread & non-blocking socket poll
@@ -1675,7 +1801,7 @@ namespace Zhare
             colProgressEmpty.Width = new GridLength(100, GridUnitType.Star);
             progressText.Text = "Connecting to phone...";
             speedBadge.Text = "⚡ 0 MB/s";
-            speedBadge.Foreground = new SolidColorBrush(Color.FromRgb(56, 189, 248));
+            speedBadge.Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255));
 
             ThreadPool.QueueUserWorkItem((state) =>
             {
@@ -1860,9 +1986,9 @@ namespace Zhare
             {
                 Border card = new Border
                 {
-                    CornerRadius = new CornerRadius(12),
-                    Background = new SolidColorBrush(Color.FromRgb(19, 27, 44)),
-                    BorderBrush = new SolidColorBrush(Color.FromRgb(30, 44, 70)),
+                    CornerRadius = new CornerRadius(0),
+                    Background = new SolidColorBrush(Color.FromRgb(0, 0, 0)),
+                    BorderBrush = new SolidColorBrush(Color.FromRgb(51, 51, 51)),
                     BorderThickness = new Thickness(1),
                     Padding = new Thickness(14, 10, 14, 10),
                     Margin = new Thickness(0, 0, 0, 6)
@@ -1872,8 +1998,8 @@ namespace Zhare
 
                 Button btnDl = CreateSleekButton(
                     "⬇️ Save",
-                    new SolidColorBrush(Color.FromRgb(79, 70, 229)),
-                    new SolidColorBrush(Color.FromRgb(99, 102, 241)),
+                    new SolidColorBrush(Color.FromRgb(234, 51, 35)),
+                    new SolidColorBrush(Color.FromRgb(234, 51, 35)),
                     Brushes.White,
                     8,
                     new Thickness(14, 5, 14, 5),
@@ -1889,7 +2015,7 @@ namespace Zhare
                 {
                     Width = 32,
                     Height = 32,
-                    CornerRadius = new CornerRadius(8),
+                    CornerRadius = new CornerRadius(0),
                     Background = new SolidColorBrush(Color.FromRgb(28, 38, 60)),
                     Margin = new Thickness(0, 0, 10, 0)
                 };

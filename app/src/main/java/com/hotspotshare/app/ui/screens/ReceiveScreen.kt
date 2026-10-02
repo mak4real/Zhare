@@ -1,10 +1,13 @@
 package com.hotspotshare.app.ui.screens
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Environment
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.hotspotshare.app.model.ReceivedFile
 import com.hotspotshare.app.service.TransferForegroundService
@@ -34,9 +38,9 @@ fun ReceiveScreen(
 ) {
     val context = LocalContext.current
     val memoryReceivedFiles by TransferForegroundService.receivedFiles.collectAsState()
+    val sharedClipboard by TransferForegroundService.sharedClipboard.collectAsState()
     var diskFiles by remember { mutableStateOf<List<ReceivedFile>>(emptyList()) }
 
-    // Read files present in Downloads/HotspotShare
     fun refreshDiskFiles() {
         val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
         val hotspotDir = File(downloadsDir, "HotspotShare")
@@ -74,19 +78,55 @@ fun ReceiveScreen(
         ) {
             Column {
                 Text(
-                    text = "Received Files",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
+                    text = "RECEIVED FILES",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onBackground
                 )
                 Text(
-                    text = "Saved in Downloads/HotspotShare",
+                    text = "SAVED IN DOWNLOADS/HOTSPOTSHARE",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             IconButton(onClick = { refreshDiskFiles() }) {
-                Icon(Icons.Default.Refresh, contentDescription = "Refresh")
+                Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = MaterialTheme.colorScheme.onBackground)
+            }
+        }
+
+        if (sharedClipboard.isNotEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                shape = RoundedCornerShape(0.dp),
+                border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("RECEIVED TEXT:", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = sharedClipboard,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = {
+                            val clipboard = ContextCompat.getSystemService(context, ClipboardManager::class.java)
+                            val clip = ClipData.newPlainText("Copied Text", sharedClipboard)
+                            clipboard?.setPrimaryClip(clip)
+                            Toast.makeText(context, "COPIED TO CLIPBOARD", Toast.LENGTH_SHORT).show()
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.onBackground,
+                            contentColor = MaterialTheme.colorScheme.background
+                        ),
+                        shape = RoundedCornerShape(0.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("COPY TO DEVICE")
+                    }
+                }
             }
         }
 
@@ -99,21 +139,16 @@ fun ReceiveScreen(
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.DownloadForOffline,
-                        contentDescription = null,
-                        modifier = Modifier.size(72.dp),
-                        tint = MaterialTheme.colorScheme.outline
-                    )
                     Text(
-                        text = "No Received Files Yet",
+                        text = "[ NO RECEIVED FILES ]",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                     Text(
-                        text = "When you send files from your Windows PC or another phone, they will appear here instantly.",
+                        text = "WHEN YOU SEND FILES FROM YOUR PC, THEY WILL APPEAR HERE INSTANTLY.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 32.dp),
@@ -124,7 +159,7 @@ fun ReceiveScreen(
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
                 items(diskFiles, key = { it.file.absolutePath }) { fileItem ->
@@ -135,7 +170,7 @@ fun ReceiveScreen(
                         onDelete = {
                             if (fileItem.file.delete()) {
                                 refreshDiskFiles()
-                                Toast.makeText(context, "File deleted", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "FILE DELETED", Toast.LENGTH_SHORT).show()
                             }
                         }
                     )
@@ -159,62 +194,61 @@ fun ReceivedFileCard(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(0.dp),
+        border = BorderStroke(2.dp, MaterialTheme.colorScheme.onBackground),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = MaterialTheme.colorScheme.background
         )
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Row(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.tertiaryContainer,
-                    modifier = Modifier.size(44.dp)
+                    shape = RoundedCornerShape(0.dp),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.size(48.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = getIconForMime("*/*", item.name),
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onTertiaryContainer
+                            tint = MaterialTheme.colorScheme.background
                         )
                     }
                 }
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = item.name,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 14.sp,
+                        text = item.name.uppercase(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = "${item.formattedSize} • $dateStr",
+                        text = "${item.formattedSize} • ${dateStr.uppercase()}",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                IconButton(onClick = onOpen) {
-                    Icon(Icons.Default.OpenInNew, contentDescription = "Open", tint = MaterialTheme.colorScheme.primary)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                Button(onClick = onOpen, modifier = Modifier.weight(1f), shape = RoundedCornerShape(0.dp), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onBackground, contentColor = MaterialTheme.colorScheme.background)) {
+                    Text("OPEN")
                 }
-                IconButton(onClick = onShare) {
-                    Icon(Icons.Default.Share, contentDescription = "Share", tint = MaterialTheme.colorScheme.secondary)
+                Button(onClick = onShare, modifier = Modifier.weight(1f), shape = RoundedCornerShape(0.dp), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant)) {
+                    Text("SHARE")
                 }
                 IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.primary)
                 }
             }
         }
@@ -232,9 +266,9 @@ private fun openFile(context: Context, file: File) {
             setDataAndType(uri, context.contentResolver.getType(uri) ?: "*/*")
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        context.startActivity(Intent.createChooser(intent, "Open file with"))
+        context.startActivity(Intent.createChooser(intent, "OPEN WITH"))
     } catch (e: Exception) {
-        Toast.makeText(context, "Could not open file: ${e.message}", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "ERROR OPENING FILE", Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -250,8 +284,8 @@ private fun shareFile(context: Context, file: File) {
             putExtra(Intent.EXTRA_STREAM, uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        context.startActivity(Intent.createChooser(intent, "Share file"))
+        context.startActivity(Intent.createChooser(intent, "SHARE FILE"))
     } catch (e: Exception) {
-        Toast.makeText(context, "Share error: ${e.message}", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "SHARE ERROR", Toast.LENGTH_SHORT).show()
     }
 }
