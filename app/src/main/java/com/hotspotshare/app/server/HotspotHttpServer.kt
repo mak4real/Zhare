@@ -19,7 +19,8 @@ class HotspotHttpServer(
 ) : NanoHTTPD(port) {
 
     val sharedFiles = CopyOnWriteArrayList<SharedFile>()
-    var sharedClipboard: String = ""
+    var outboundText: String = ""
+    var inboundText: String = ""
     var onFileReceived: ((File) -> Unit)? = null
     var onClipboardUpdated: ((String) -> Unit)? = null
 
@@ -77,12 +78,12 @@ class HotspotHttpServer(
                 // Clipboard API
                 uri == "/api/clipboard" -> {
                     if (method == Method.GET) {
-                        newFixedLengthResponse(Response.Status.OK, "text/plain", sharedClipboard)
+                        newFixedLengthResponse(Response.Status.OK, "text/plain", outboundText)
                     } else if (method == Method.POST) {
                         val map = HashMap<String, String>()
                         session.parseBody(map)
                         val postData = map["postData"] ?: ""
-                        sharedClipboard = postData
+                        inboundText = postData
                         onClipboardUpdated?.invoke(postData)
                         newFixedLengthResponse(Response.Status.OK, "application/json", "{\"status\":\"ok\"}")
                     } else {

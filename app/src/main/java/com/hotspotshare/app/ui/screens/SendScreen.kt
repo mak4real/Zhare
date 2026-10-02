@@ -16,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -33,7 +34,7 @@ fun SendScreen(
 ) {
     val context = LocalContext.current
     val sharedFiles by TransferForegroundService.sharedFiles.collectAsState()
-    val sharedClipboard by TransferForegroundService.sharedClipboard.collectAsState()
+    val outboundText by TransferForegroundService.outboundText.collectAsState()
 
     // File picker launcher supporting multiple files of any type
     val filePickerLauncher = rememberLauncherForActivityResult(
@@ -86,10 +87,10 @@ fun SendScreen(
                     )
                 }
 
-                if (sharedFiles.isNotEmpty() || sharedClipboard.isNotEmpty()) {
+                if (sharedFiles.isNotEmpty() || outboundText.isNotEmpty()) {
                     TextButton(onClick = { 
                         TransferForegroundService.clearSharedFiles()
-                        TransferForegroundService.setSharedClipboard("")
+                        TransferForegroundService.setOutboundText("")
                     }) {
                         Icon(Icons.Default.DeleteSweep, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(4.dp))
@@ -97,26 +98,47 @@ fun SendScreen(
                     }
                 }
             }
-            
             // Text Sharing Component
-            OutlinedTextField(
-                value = sharedClipboard,
-                onValueChange = { TransferForegroundService.setSharedClipboard(it) },
+            var txtInput by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf("") }
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp)
                     .padding(bottom = 16.dp),
-                placeholder = { Text("TYPE OR PASTE TEXT HERE EXPOSED TO PC CLIPIBOARD") },
-                textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
-                shape = RoundedCornerShape(0.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    focusedContainerColor = MaterialTheme.colorScheme.background,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                    cursorColor = MaterialTheme.colorScheme.primary
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = txtInput,
+                    onValueChange = { txtInput = it },
+                    modifier = Modifier.weight(1f).height(60.dp),
+                    placeholder = { Text("TYPE TEXT TO SEND TO PC") },
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
+                    shape = RoundedCornerShape(0.dp),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        focusedContainerColor = MaterialTheme.colorScheme.background,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                        cursorColor = MaterialTheme.colorScheme.primary
+                    )
                 )
-            )
+                Button(
+                    onClick = { 
+                        TransferForegroundService.setOutboundText(txtInput)
+                        android.widget.Toast.makeText(context, "TEXT SENT", android.widget.Toast.LENGTH_SHORT).show()
+                        txtInput = ""
+                    },
+                    modifier = Modifier.height(60.dp),
+                    shape = RoundedCornerShape(0.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.onBackground,
+                        contentColor = MaterialTheme.colorScheme.background
+                    )
+                ) {
+                    Text("SEND")
+                }
+            }
 
             if (sharedFiles.isEmpty()) {
                 Box(

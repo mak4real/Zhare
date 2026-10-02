@@ -352,7 +352,7 @@ namespace Zhare
             Grid rootGrid = new Grid();
             rootGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(82) }); // Header
             rootGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(58) }); // Quick Connect & Utilities Bar
-            rootGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(70) }); // Clipboard Bar
+            rootGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(110) }); // Clipboard Bar
             rootGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(52) }); // Segmented Nav Tabs
             rootGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Main Content
             mainWindow.Content = rootGrid;
@@ -723,42 +723,30 @@ namespace Zhare
             Grid.SetRow(clipboardBorder, 2);
             rootGrid.Children.Add(clipboardBorder);
 
-            DockPanel clipboardDock = new DockPanel();
-            clipboardBorder.Child = clipboardDock;
+            Grid cbGrid = new Grid();
+            cbGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+            cbGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+            clipboardBorder.Child = cbGrid;
 
-            TextBlock clipIcon = new TextBlock
+            // Send Row
+            DockPanel sendDock = new DockPanel { Margin = new Thickness(0,0,0,5) };
+            Grid.SetRow(sendDock, 0);
+            cbGrid.Children.Add(sendDock);
+
+            TextBlock sendLabel = new TextBlock
             {
-                Text = "🔗 SYNC TEXT",
+                Text = "📤 SEND TEXT",
                 FontSize = 13,
                 FontWeight = FontWeights.Bold,
                 Foreground = Brushes.White,
                 VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(0, 0, 10, 0)
+                Margin = new Thickness(0, 0, 10, 0),
+                Width = 110
             };
-            DockPanel.SetDock(clipIcon, Dock.Left);
-            clipboardDock.Children.Add(clipIcon);
+            DockPanel.SetDock(sendLabel, Dock.Left);
+            sendDock.Children.Add(sendLabel);
 
-            Button btnCopy = CreateBorderedButton(
-                "COPY",
-                new SolidColorBrush(Color.FromRgb(0, 0, 0)),
-                new SolidColorBrush(Color.FromRgb(255, 255, 255)),
-                new SolidColorBrush(Color.FromRgb(255, 255, 255)),
-                new SolidColorBrush(Color.FromRgb(0, 0, 0)),
-                new SolidColorBrush(Color.FromRgb(255, 255, 255)),
-                0,
-                new Thickness(12, 0, 12, 0),
-                (s, e) =>
-                {
-                    if (!string.IsNullOrEmpty(txtClipboard.Text))
-                        Clipboard.SetText(txtClipboard.Text);
-                }
-            );
-            btnCopy.Height = 36;
-            btnCopy.Margin = new Thickness(10, 0, 0, 0);
-            DockPanel.SetDock(btnCopy, Dock.Right);
-            clipboardDock.Children.Add(btnCopy);
-
-            txtClipboard = new TextBox
+            TextBox txtSend = new TextBox
             {
                 Height = 36,
                 Background = new SolidColorBrush(Color.FromRgb(0, 0, 0)),
@@ -769,14 +757,60 @@ namespace Zhare
                 FontSize = 13,
                 VerticalContentAlignment = VerticalAlignment.Center
             };
-            txtClipboard.Template = CreateRoundedTextBoxTemplate(0);
-            txtClipboard.TextChanged += (s, e) =>
+            txtSend.Template = CreateRoundedTextBoxTemplate(0);
+
+            Button btnSend = CreateBorderedButton("SEND", new SolidColorBrush(Color.FromRgb(0, 0, 0)), new SolidColorBrush(Color.FromRgb(255, 255, 255)), new SolidColorBrush(Color.FromRgb(255, 255, 255)), new SolidColorBrush(Color.FromRgb(0, 0, 0)), new SolidColorBrush(Color.FromRgb(255, 255, 255)), 0, new Thickness(12, 0, 12, 0), (s, e) => {
+                PushClipboard(txtSend.Text);
+                txtSend.Text = "";
+            });
+            btnSend.Height = 36;
+            btnSend.Margin = new Thickness(10, 0, 0, 0);
+            DockPanel.SetDock(btnSend, Dock.Right);
+            
+            sendDock.Children.Add(btnSend);
+            sendDock.Children.Add(txtSend);
+
+            // Receive Row
+            DockPanel recvDock = new DockPanel { Margin = new Thickness(0,5,0,0) };
+            Grid.SetRow(recvDock, 1);
+            cbGrid.Children.Add(recvDock);
+
+            TextBlock recvLabel = new TextBlock
             {
-                string text = txtClipboard.Text;
-                // Simple debounce equivalent logic could be added here, but direct push works for testing
-                PushClipboard(text);
+                Text = "📥 RECV TEXT",
+                FontSize = 13,
+                FontWeight = FontWeights.Bold,
+                Foreground = Brushes.White,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 10, 0),
+                Width = 110
             };
-            clipboardDock.Children.Add(txtClipboard);
+            DockPanel.SetDock(recvLabel, Dock.Left);
+            recvDock.Children.Add(recvLabel);
+
+            txtClipboard = new TextBox
+            {
+                Height = 36,
+                Background = new SolidColorBrush(Color.FromRgb(15, 15, 15)),
+                Foreground = Brushes.White,
+                BorderThickness = new Thickness(1),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(100, 100, 100)),
+                Padding = new Thickness(10, 0, 10, 0),
+                FontSize = 13,
+                VerticalContentAlignment = VerticalAlignment.Center,
+                IsReadOnly = true
+            };
+            txtClipboard.Template = CreateRoundedTextBoxTemplate(0);
+
+            Button btnCopy = CreateBorderedButton("COPY", new SolidColorBrush(Color.FromRgb(0, 0, 0)), new SolidColorBrush(Color.FromRgb(255, 255, 255)), new SolidColorBrush(Color.FromRgb(255, 255, 255)), new SolidColorBrush(Color.FromRgb(0, 0, 0)), new SolidColorBrush(Color.FromRgb(255, 255, 255)), 0, new Thickness(12, 0, 12, 0), (s, e) => {
+                if (!string.IsNullOrEmpty(txtClipboard.Text)) Clipboard.SetText(txtClipboard.Text);
+            });
+            btnCopy.Height = 36;
+            btnCopy.Margin = new Thickness(10, 0, 0, 0);
+            DockPanel.SetDock(btnCopy, Dock.Right);
+
+            recvDock.Children.Add(btnCopy);
+            recvDock.Children.Add(txtClipboard);
 
             // ================= 3. SEGMENTED NAVIGATION DOCK =================
             Border navContainer = new Border
@@ -1552,15 +1586,14 @@ namespace Zhare
                 using (HttpWebResponse resp = (HttpWebResponse)req.GetResponse())
                 using (StreamReader reader = new StreamReader(resp.GetResponseStream()))
                 {
-                    string json = reader.ReadToEnd();
-                    string remoteClipboard = ExtractJson(json, "clipboard");
+                    string remoteClipboard = reader.ReadToEnd();
                     if (remoteClipboard != null) remoteClipboard = remoteClipboard.Replace("\\n", "\n").Replace("\\r", "\r");
                     if (!string.IsNullOrEmpty(remoteClipboard) && remoteClipboard != currentClipboard)
                     {
                         currentClipboard = remoteClipboard;
                         mainWindow.Dispatcher.BeginInvoke(new Action(() =>
                         {
-                            if (txtClipboard != null && txtClipboard.Text != currentClipboard)
+                            if (txtClipboard != null)
                             {
                                 txtClipboard.Text = currentClipboard;
                             }
@@ -1573,9 +1606,14 @@ namespace Zhare
 
         private static void PushClipboard(string text)
         {
-            if (text == currentClipboard) return;
-            currentClipboard = text;
-            DiscoveredDevice dev = GetSelectedDevice();
+            if (string.IsNullOrWhiteSpace(text)) return;
+            DiscoveredDevice dev = null;
+            if (mainWindow != null)
+            {
+                mainWindow.Dispatcher.Invoke(new Action(() => {
+                    dev = GetSelectedDevice();
+                }));
+            }
             if (dev == null) return;
             ThreadPool.QueueUserWorkItem((s) =>
             {

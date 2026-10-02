@@ -38,7 +38,7 @@ fun ReceiveScreen(
 ) {
     val context = LocalContext.current
     val memoryReceivedFiles by TransferForegroundService.receivedFiles.collectAsState()
-    val sharedClipboard by TransferForegroundService.sharedClipboard.collectAsState()
+    val inboundText by TransferForegroundService.inboundText.collectAsState()
     var diskFiles by remember { mutableStateOf<List<ReceivedFile>>(emptyList()) }
 
     fun refreshDiskFiles() {
@@ -94,7 +94,7 @@ fun ReceiveScreen(
             }
         }
 
-        if (sharedClipboard.isNotEmpty()) {
+        if (inboundText.isNotEmpty()) {
             Card(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                 shape = RoundedCornerShape(0.dp),
@@ -105,7 +105,7 @@ fun ReceiveScreen(
                     Text("RECEIVED TEXT:", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = sharedClipboard,
+                        text = inboundText,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onBackground
                     )
@@ -113,7 +113,7 @@ fun ReceiveScreen(
                     Button(
                         onClick = {
                             val clipboard = ContextCompat.getSystemService(context, ClipboardManager::class.java)
-                            val clip = ClipData.newPlainText("Copied Text", sharedClipboard)
+                            val clip = ClipData.newPlainText("Copied Text", inboundText)
                             clipboard?.setPrimaryClip(clip)
                             Toast.makeText(context, "COPIED TO CLIPBOARD", Toast.LENGTH_SHORT).show()
                         },
